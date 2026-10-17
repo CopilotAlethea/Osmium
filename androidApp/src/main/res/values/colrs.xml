@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 添加这一行，颜色值换成你设计稿里的十六进制色值 -->
+    <color name="ic_launcher_background">#732A39</color>
+</resources>

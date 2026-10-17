@@ -1,0 +1,89 @@
+CREATE TABLE BookEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    title TEXT NOT NULL,
+    author TEXT NOT NULL,
+    path TEXT NOT NULL,
+    coverUrl TEXT,
+    progress REAL NOT NULL DEFAULT 0.0,
+    tags TEXT NOT NULL DEFAULT "",
+    importTimestamp INTEGER NOT NULL DEFAULT 0,
+    lastReadTimestamp INTEGER NOT NULL DEFAULT 0,
+    lastLocation TEXT,
+    titlePinyin TEXT NOT NULL DEFAULT "",
+    titleInitials TEXT NOT NULL DEFAULT ""
+);
+
+insertBook:
+INSERT OR REPLACE INTO BookEntity(id, title, author, path, coverUrl, progress, tags, importTimestamp, lastReadTimestamp, lastLocation, titlePinyin, titleInitials)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+updateProgress:
+UPDATE BookEntity SET progress = ?, lastReadTimestamp = ?, lastLocation = ? WHERE id = ?;
+
+updateBookInfo:
+UPDATE BookEntity SET title = ?, author = ?, titlePinyin = ?, titleInitials = ? WHERE id = ?;
+
+updateBookTags:
+UPDATE BookEntity SET tags = ? WHERE id = ?;
+
+selectAllBooks:
+SELECT id, title, author, path, coverUrl, progress, tags, importTimestamp, lastReadTimestamp, lastLocation, titlePinyin, titleInitials
+FROM BookEntity
+ORDER BY lastReadTimestamp DESC;
+
+deleteBook:
+DELETE FROM BookEntity WHERE id = ?;
+
+CREATE TABLE SettingsEntity (
+    settingKey TEXT NOT NULL PRIMARY KEY,
+    settingValue TEXT NOT NULL
+);
+
+insertSetting:
+INSERT OR REPLACE INTO SettingsEntity(settingKey, settingValue) VALUES (?, ?);
+
+getSetting:
+SELECT settingValue FROM SettingsEntity WHERE settingKey = ?;
+
+selectAllSettings:
+SELECT * FROM SettingsEntity;
+
+CREATE TABLE AnnotationEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    bookId TEXT NOT NULL,
+    href TEXT NOT NULL,
+    mediaType TEXT NOT NULL,
+    locations TEXT NOT NULL DEFAULT "{}",
+    text TEXT NOT NULL DEFAULT "{}",
+    title TEXT,
+    totalProgression REAL NOT NULL DEFAULT 0.0,
+    type TEXT NOT NULL, -- HIGHLIGHT, UNDERLINE, NOTE
+    style TEXT, -- marker, straight, wavy
+    color INTEGER,
+    note TEXT,
+    chapter TEXT,
+    chapterProgression REAL,
+    timestamp INTEGER NOT NULL,
+    FOREIGN KEY(bookId) REFERENCES BookEntity(id) ON DELETE CASCADE
+);
+
+insertAnnotation:
+INSERT OR REPLACE INTO AnnotationEntity(id, bookId, href, mediaType, locations, text, title, totalProgression, type, style, color, note, chapter, chapterProgression, timestamp)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+deleteAnnotation:
+DELETE FROM AnnotationEntity WHERE id = ?;
+
+deleteAnnotationsByLocator:
+DELETE FROM AnnotationEntity WHERE bookId = ? AND href = ? AND locations = ?;
+
+getAnnotationsForBook:
+SELECT id, bookId, href, mediaType, locations, text, title, totalProgression, type, style, color, note, chapter, chapterProgression, timestamp
+FROM AnnotationEntity
+WHERE bookId = ?
+ORDER BY timestamp DESC;
+
+countAnnotationsByType:
+SELECT bookId, type, COUNT(id) AS total
+FROM AnnotationEntity
+GROUP BY bookId, type;
